@@ -1,0 +1,16 @@
+<<!DOCTYPE html>
+<html>
+<head><title>Results</title></head>
+<body>
+    <h1>Results for "{{ query }}"</h1>
+    {% for material in materials %}
+        <div>
+            <p><strong>{{ material[1] }}</strong> (Code: {{ material[2] }})</p>
+            <a href="mailto:?subject=Study Material&body=Check this: {{ material[3] }}">📧 Email</a> |
+            <a href="https://wa.me/?text=Check this: {{ material[3] }}" target="_blank">📱 WhatsApp</a> |
+            <a href="{{ material[3] }}" download>📥 Google Drive</a>
+        </div>
+        <hr>
+    {% endfor %}
+</body>
+</html>
