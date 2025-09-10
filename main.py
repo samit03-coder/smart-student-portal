@@ -2,15 +2,7 @@ from flask import Flask, render_template, request, redirect
 import mysql.connector
 import os
 
-app = Flask(__name__)  
-
-@app.route('/')
-def home():
-    return "Welcome to Smart Student Portal"
-@app.route('/search')
-def search():
-    # your search logic here
-    pass
+app = Flask(__name__)
 
 def get_db_connection():
     return mysql.connector.connect(
@@ -19,6 +11,10 @@ def get_db_connection():
         password=os.environ['DB_PASSWORD'],
         database=os.environ['DB_NAME']
     )
+
+@app.route('/')
+def home():
+    return "Welcome to Smart Student Portal"
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -45,7 +41,7 @@ def search():
     return render_template('search.html', users=users)
 
 @app.route('/profile/<int:id>')
-def profile(id):
+def view_profile(id):
     conn = get_db_connection()
     cursor = conn.cursor()
     query = "SELECT id, name, email, phone FROM users WHERE id = %s"
@@ -56,6 +52,7 @@ def profile(id):
         return render_template('profile.html', user=user)
     else:
         return "User not found"
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
