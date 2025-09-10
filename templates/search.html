@@ -1,36 +1,21 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Search Page</title>
-    <style>
-        .right-panel {
-            width: 250px;
-            float: right;
-            background-color: #f9f9f9;
-            padding: 10px;
-            height: 100vh;
-        }
-        .profile-folder {
-            margin: 10px 0;
-            padding: 8px;
-            background-color: #ddd;
-            border-radius: 5px;
-        }
-    </style>
-</head>
-<body>
-    <div class="right-panel">
-        <h3>User Profiles</h3>
-        {% for user in users %}
-            <div class="profile-folder">
-                <a href="/profile/{{ user[0] }}">{{ user[1] }}</a>
-            </div>
+<div class="user-list">
+    <h3>Student List</h3>
+    <ul>
+        {% for student in students %}
+            <li>
+                {{ student[1] }} —
+                <a href="/search?profile_id={{ student[0] }}">View Profile</a>
+            </li>
         {% endfor %}
-    </div>
-
-    <div class="main-content">
-        <h2>Welcome to the Search Page</h2>
-        <!-- Add your search form or content here -->
-    </div>
-</body>
-</html>
+    </ul>
+</div>
+<div class="profile-view">
+    {% if profile %}
+        <h3>Profile</h3>
+        <p><strong>Username:</strong> {{ profile[1] }}</p>
+        <p><strong>Email:</strong> {{ profile[2] }}</p>
+        <p><strong>Phone:</strong> {{ profile[3] }}</p>
+    {% else %}
+        <p>Select a student to view profile.</p>
+    {% endif %}
+</div>

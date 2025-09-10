@@ -14,16 +14,16 @@ def get_db_connection():
 
 @app.route('/')
 def home():
-    return "Welcome to Smart Student Portal"
+    return render_template('login.html')
 
 @app.route('/login', methods=['POST'])
 def login():
-    student_id = request.form['student_id']
+    username = request.form['username']
     password = request.form['password']
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "SELECT * FROM students WHERE student_id=%s AND password=%s"
-    cursor.execute(query, (student_id, password))
+    query = "SELECT * FROM student_data WHERE username=%s AND password=%s"
+    cursor.execute(query, (username, password))
     result = cursor.fetchone()
     conn.close()
     if result:
@@ -35,23 +35,30 @@ def login():
 def search():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, name FROM users")
-    users = cursor.fetchall()
+    cursor.execute("SELECT id, username FROM student_data")
+    students = cursor.fetchall()
+
+    profile_id = request.args.get('profile_id')
+    profile = None
+    if profile_id:
+        cursor.execute("SELECT id, username, email, phone FROM student_data WHERE id = %s", (profile_id,))
+        profile = cursor.fetchone()
+
     conn.close()
-    return render_template('search.html', users=users)
+    return render_template('search.html', students=students, profile=profile)
 
 @app.route('/profile/<int:id>')
 def view_profile(id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "SELECT id, name, email, phone FROM users WHERE id = %s"
+    query = "SELECT id, username, email, phone FROM student_data WHERE id = %s"
     cursor.execute(query, (id,))
-    user = cursor.fetchone()
+    student = cursor.fetchone()
     conn.close()
-    if user:
-        return render_template('profile.html', user=user)
+    if student:
+        return render_template('profile.html', student=student)
     else:
-        return "User not found"
+        return "Student not found"
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
