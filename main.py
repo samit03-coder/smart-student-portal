@@ -1,21 +1,16 @@
 from flask import Flask, render_template, request, redirect, session
-import mysql.connector
 import os
+import mysql.connector
 
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Replace with a secure key
-
-# Load environment variables (optional if using .env)
-# from dotenv import load_dotenv
-# load_dotenv()
 
 def get_db_connection():
     return mysql.connector.connect(
-        host=os.environ['DB_HOST'],
-        user=os.environ['DB_USER'],
-        password=os.environ['DB_PASSWORD'],
-        database=os.environ['DB_NAME']
-    )
+        host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT")),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASS"),
+        database=os.getenv("DB_NAME")
+    )    
 
 # 🔹 Route: Login Page
 @app.route('/')
