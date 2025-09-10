@@ -1,9 +1,16 @@
 from flask import Flask, render_template, request, redirect
 import mysql.connector
 import os
+
+app = Flask(__name__)  
+
 @app.route('/')
 def home():
     return "Welcome to Smart Student Portal"
+@app.route('/search')
+def search():
+    # your search logic here
+    pass
 
 def get_db_connection():
     return mysql.connector.connect(
