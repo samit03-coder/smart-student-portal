@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Smart Student Portal{% endblock %}
+
+{% block body_class %}bg-light{% endblock %}
+
+{% block main_class %}container-fluid vh-100 d-flex align-items-center justify-content-center{% endblock %}
+
+{% block content %}
+<div class="row w-100">
+    <div class="col-md-6 col-lg-4 mx-auto">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                <!-- Logo and Title -->
+                <div class="text-center mb-4">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-mortarboard-fill text-white" style="font-size: 2rem;"></i>
+                    </div>
+                    <h2 class="fw-bold text-primary">Smart Portal</h2>
+                    <p class="text-muted">Sign in to access your study materials</p>
+                </div>
+
+                <!-- Login Form -->
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.user_id.label(class="form-label fw-semibold") }}
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            {{ form.user_id(class="form-control" + (" is-invalid" if form.user_id.errors else ""), placeholder="Enter your Student ID") }}
+                        </div>
+                        {% if form.user_id.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.user_id.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        {{ form.password.label(class="form-label fw-semibold") }}
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="Enter your password", id="password") }}
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="bi bi-eye" id="toggleIcon"></i>
+                            </button>
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Register Link -->
+                <div class="text-center">
+                    <p class="text-muted mb-0">Don't have an account?</p>
+                    <a href="{{ url_for('register') }}" class="text-decoration-none">
+                        <i class="bi bi-person-plus me-1"></i>Create Account
+                    </a>
+                </div>
+
+                <!-- Demo Credentials -->
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6 class="text-muted mb-2">
+                        <i class="bi bi-info-circle me-1"></i>Demo Credentials
+                    </h6>
+                    <small class="text-muted">
+                        <strong>Student:</strong> admin / admin123<br>
+                        <strong>Role:</strong> Administrator
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const togglePassword = document.getElementById('togglePassword');
+    const password = document.getElementById('password');
+    const toggleIcon = document.getElementById('toggleIcon');
+    
+    togglePassword.addEventListener('click', function() {
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        
+        if (type === 'text') {
+            toggleIcon.classList.remove('bi-eye');
+            toggleIcon.classList.add('bi-eye-slash');
+        } else {
+            toggleIcon.classList.remove('bi-eye-slash');
+            toggleIcon.classList.add('bi-eye');
+        }
+    });
+});
+</script>
+{% endblock %}

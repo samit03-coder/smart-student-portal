@@ -1,14 +1,263 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart Study Material</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .login-container {
+            background: #4a148c;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border: 3px solid;
+            border-image: linear-gradient(45deg, #e91e63, #ff4081) 1;
+            max-width: 450px;
+            width: 100%;
+        }
+        
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-family: 'Arial', 'Helvetica', sans-serif;
+        }
+        
+        .logo .highlight {
+            color: #ff4081;
+        }
+        
+        .tagline {
+            color: #e1bee7;
+            font-size: 14px;
+            font-style: italic;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-label {
+            display: block;
+            color: #fff;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #7b1fa2;
+            border-radius: 25px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input::placeholder {
+            color: #ce93d8;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #ff4081;
+            background: rgba(255,255,255,0.15);
+            box-shadow: 0 0 10px rgba(255,64,129,0.3);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(233,30,99,0.4);
+        }
+        
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .alert-error {
+            background: rgba(244,67,54,0.2);
+            color: #ffcdd2;
+            border: 1px solid #f44336;
+        }
+        
+        .alert-success {
+            background: rgba(76,175,80,0.2);
+            color: #c8e6c9;
+            border: 1px solid #4caf50;
+        }
+        
+        .description {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            text-align: center;
+            max-width: 400px;
+            font-style: italic;
+        }
+        
+        .signature {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: rgba(255,255,255,0.6);
+            font-size: 11px;
+            font-style: italic;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #ce93d8;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+        
+        .password-toggle:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+            
+            .logo {
+                font-size: 28px;
+            }
+            
+            .description {
+                bottom: 60px;
+                font-size: 11px;
+                padding: 0 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h2>Login</h2>
-    <form action="/login" method="POST">
-        <input type="text" name="id" placeholder="Enter your ID" required><br>
-        <input type="password" name="password" placeholder="Enter your password" required><br>
-        <button type="submit">Login</button>
-    </form>
+    <div class="login-container">
+        <div class="logo-section">
+            <div class="logo">Smart <span class="highlight">Study</span> Material</div>
+            <div class="tagline">Study Material Based Platform</div>
+        </div>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="alert alert-error">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="/login">
+            <div class="form-group">
+                <label class="form-label" for="user_id">USER ID</label>
+                <input type="text" id="user_id" name="user_id" class="form-input" 
+                       placeholder="Enter your ID" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="password">PASSWORD</label>
+                <div style="position: relative;">
+                    <input type="password" id="password" name="password" class="form-input" 
+                           placeholder="Enter your password" required>
+                    <button type="button" onclick="togglePassword()" class="password-toggle">
+                        👁️
+                    </button>
+                </div>
+            </div>
+            
+            <button type="submit" class="login-btn">LOGIN</button>
+        </form>
+    </div>
+    
+    <div class="description">
+        A site designed for students need where they can access their needed study materials
+    </div>
+    
+    <div class="signature">
+        created by @NMC
+    </div>
+    
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.querySelector('.password-toggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.innerHTML = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.innerHTML = '👁️';
+            }
+        }
+    </script>
 </body>
 </html>

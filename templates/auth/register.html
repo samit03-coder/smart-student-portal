@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Smart Student Portal{% endblock %}
+
+{% block body_class %}bg-light{% endblock %}
+
+{% block main_class %}container-fluid vh-100 d-flex align-items-center justify-content-center{% endblock %}
+
+{% block content %}
+<div class="row w-100">
+    <div class="col-md-8 col-lg-6 col-xl-5 mx-auto">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                <!-- Logo and Title -->
+                <div class="text-center mb-4">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-person-plus-fill text-white" style="font-size: 2rem;"></i>
+                    </div>
+                    <h2 class="fw-bold text-primary">Create Account</h2>
+                    <p class="text-muted">Join Smart Portal to access study materials</p>
+                </div>
+
+                <!-- Registration Form -->
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.user_id.label(class="form-label fw-semibold") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-person-badge"></i>
+                                </span>
+                                {{ form.user_id(class="form-control" + (" is-invalid" if form.user_id.errors else ""), placeholder="Student ID") }}
+                            </div>
+                            {% if form.user_id.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.user_id.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            {{ form.username.label(class="form-label fw-semibold") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), placeholder="Full Name") }}
+                            </div>
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.username.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label fw-semibold") }}
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="your.email@example.com") }}
+                        </div>
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.phone.label(class="form-label fw-semibold") }}
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-phone"></i>
+                            </span>
+                            {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else ""), placeholder="+1234567890") }}
+                        </div>
+                        {% if form.phone.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.phone.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.password.label(class="form-label fw-semibold") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock"></i>
+                                </span>
+                                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="Password", id="password") }}
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="bi bi-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            {{ form.confirm_password.label(class="form-label fw-semibold") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-lock-fill"></i>
+                                </span>
+                                {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Confirm Password") }}
+                            </div>
+                            {% if form.confirm_password.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.confirm_password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Password Requirements -->
+                    <div class="mb-4">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Password must be at least 8 characters long
+                        </small>
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-person-plus me-2"></i>Create Account
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Login Link -->
+                <div class="text-center">
+                    <p class="text-muted mb-0">Already have an account?</p>
+                    <a href="{{ url_for('login') }}" class="text-decoration-none">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const togglePassword = document.getElementById('togglePassword');
+    const password = document.getElementById('password');
+    const toggleIcon = document.getElementById('toggleIcon');
+    
+    togglePassword.addEventListener('click', function() {
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        
+        if (type === 'text') {
+            toggleIcon.classList.remove('bi-eye');
+            toggleIcon.classList.add('bi-eye-slash');
+        } else {
+            toggleIcon.classList.remove('bi-eye-slash');
+            toggleIcon.classList.add('bi-eye');
+        }
+    });
+});
+</script>
+{% endblock %}

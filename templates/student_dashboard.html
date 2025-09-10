@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal - Smart Study Material</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .navbar {
+            background: #4a148c;
+            padding: 15px 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .navbar h1 {
+            color: #fff;
+            font-size: 24px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(233,30,99,0.4);
+        }
+        
+        .main-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+        }
+        
+        .student-profile-box {
+            background: #4a148c;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #ff4081;
+            height: fit-content;
+        }
+        
+        .student-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .student-avatar {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .student-name {
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .student-id {
+            color: #ff4081;
+            font-size: 12px;
+        }
+        
+        .profile-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: bold;
+            display: block;
+            transition: all 0.3s ease;
+        }
+        
+        .profile-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(233,30,99,0.4);
+        }
+        
+        .profile-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            border: 1px solid #ff4081;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: #ff4081;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .info-value {
+            color: #fff;
+            font-size: 12px;
+        }
+        
+        .content-area {
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .welcome-section {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .welcome-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .search-bar {
+            margin-bottom: 25px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px 25px;
+            border: 2px solid #ddd;
+            border-radius: 30px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #ff4081;
+            box-shadow: 0 0 10px rgba(255,64,129,0.2);
+        }
+        
+        .materials-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .material-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid #ff4081;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .material-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .material-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .material-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            flex-grow: 1;
+        }
+        
+        .material-meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .material-description {
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .material-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 8px 16px;
+            border: 2px solid #ff4081;
+            background: transparent;
+            color: #ff4081;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background: #ff4081;
+            color: white;
+        }
+        
+        .action-btn.download {
+            background: #ff4081;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .material-actions {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>Student Portal</h1>
+        <div class="nav-buttons">
+            <a href="/dashboard" class="nav-btn">Dashboard</a>
+            <a href="/logout" class="nav-btn">Logout</a>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="student-profile-box">
+            <div class="student-info">
+                <div class="student-avatar">{{ student.username[0].upper() }}</div>
+                <div class="student-name">{{ student.username }}</div>
+                <div class="student-id">{{ student.id }}</div>
+            </div>
+            
+            <button onclick="toggleProfile()" class="profile-btn">User Profile</button>
+            
+            <div id="profileInfo" class="profile-info" style="display: none;">
+                <div class="info-item">
+                    <div class="info-label">Student ID</div>
+                    <div class="info-value">{{ student.id }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Name</div>
+                    <div class="info-value">{{ student.username }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value">{{ student.email }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Phone</div>
+                    <div class="info-value">{{ student.phone }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-area">
+            <div class="search-bar">
+                <form method="GET">
+                    <input type="text" name="search" class="search-input" 
+                           placeholder="Search for study materials, subjects, categories..." 
+                           value="{{ search }}">
+                </form>
+            </div>
+            
+            <div class="materials-grid">
+                {% for material in materials %}
+                <div class="material-card">
+                    <div class="material-header">
+                        <div>
+                            <div class="material-title">{{ material.material_name }}</div>
+                            <div class="material-meta">
+                                📂 {{ material.category }} • 📚 {{ material.subject }} • 📅 {{ material.created_at.strftime('%Y-%m-%d') }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if material.description %}
+                    <div class="material-description">{{ material.description }}</div>
+                    {% endif %}
+                    
+                    <div class="material-actions">
+                        <a href="{{ material.material_link }}" target="_blank" class="action-btn download">📥 Download</a>
+                        <button class="action-btn" onclick="sendEmail('{{ material.material_name }}', '{{ material.material_link }}')">📧 Email</button>
+                        <button class="action-btn" onclick="sendWhatsApp('{{ material.material_name }}', '{{ material.material_link }}')">📱 WhatsApp</button>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% if not materials %}
+                <div style="text-align: center; padding: 50px; color: #666;">
+                    <h3>No materials found</h3>
+                    <p>Try a different search term or check back later for new materials.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function toggleProfile() {
+            const profileInfo = document.getElementById('profileInfo');
+            const button = document.querySelector('.profile-btn');
+            
+            if (profileInfo.style.display === 'none') {
+                profileInfo.style.display = 'block';
+                button.textContent = 'Hide Profile';
+            } else {
+                profileInfo.style.display = 'none';
+                button.textContent = 'User Profile';
+            }
+        }
+        
+        function sendEmail(materialName, materialLink) {
+            const email = prompt('Enter email address:');
+            if (email) {
+                fetch('/api/send_email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        material_name: materialName,
+                        material_link: materialLink,
+                        email: email
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                    } else {
+                        alert(data.error || 'Failed to send email');
+                    }
+                })
+                .catch(error => {
+                    alert('Error sending email: ' + error);
+                });
+            }
+        }
+        
+        function sendWhatsApp(materialName, materialLink) {
+            const phone = prompt('Enter WhatsApp number (10 digits for India, or with country code):');
+            if (phone) {
+                fetch('/api/send_whatsapp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        material_name: materialName,
+                        material_link: materialLink,
+                        phone: phone
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.action === 'open_whatsapp') {
+                        // Open WhatsApp with pre-filled message
+                        window.open(data.whatsapp_url, '_blank');
+                        alert('WhatsApp opened! Click Send to share the material.');
+                    } else if (data.error) {
+                        alert(data.error);
+                    } else {
+                        alert('WhatsApp ready! Please check your messages.');
+                    }
+                })
+                .catch(error => {
+                    alert('Error preparing WhatsApp: ' + error);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

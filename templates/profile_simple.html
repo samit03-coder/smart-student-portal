@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Study Material - Profile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            min-height: 100vh;
+        }
+        
+        /* Header Banner */
+        .header-banner {
+            background-color: #87CEEB; /* Light blue */
+            padding: 20px 40px;
+            text-align: center;
+        }
+        
+        .header-banner h1 {
+            color: #000;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        
+        /* Navigation */
+        .nav-bar {
+            background-color: #73C2FB; /* Maya blue */
+            padding: 15px 0;
+            text-align: center;
+        }
+        
+        .nav-bar a {
+            color: white;
+            text-decoration: none;
+            margin: 0 20px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .nav-bar a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        /* Profile Card */
+        .profile-card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .profile-title {
+            color: #73C2FB; /* Maya blue */
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .profile-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .info-item {
+            margin-bottom: 20px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .info-value {
+            color: #666;
+            font-size: 16px;
+            padding: 8px;
+            background-color: #f5f5f5; /* Light grey */
+            border-radius: 5px;
+        }
+        
+        /* Actions */
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .action-button {
+            background-color: #73C2FB; /* Maya blue */
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .action-button:hover {
+            background-color: #5BA3D4;
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 50px;
+        }
+        
+        .footer p {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Banner -->
+    <div class="header-banner">
+        <h1>SMART STUDY MATERIAL</h1>
+    </div>
+    
+    <!-- Navigation -->
+    <div class="nav-bar">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/search">Search</a>
+        <a href="/profile">Profile</a>
+        <a href="/logout">Logout</a>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="profile-card">
+            <div class="profile-header">
+                <h2 class="profile-title">User Profile</h2>
+            </div>
+            
+            <div class="profile-info">
+                <div class="info-item">
+                    <div class="info-label">Student ID:</div>
+                    <div class="info-value">{{ student.id }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">Full Name:</div>
+                    <div class="info-value">{{ student.username }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">Email:</div>
+                    <div class="info-value">{{ student.email }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">Phone:</div>
+                    <div class="info-value">{{ student.phone }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">Role:</div>
+                    <div class="info-value">{{ student.role.title() }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">Last Login:</div>
+                    <div class="info-value">{{ student.last_login.split('T')[0] if student.last_login else 'First time' }}</div>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <a href="/search" class="action-button">Search Materials</a>
+                <a href="/dashboard" class="action-button">Go to Dashboard</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+        <p>Created by @NMC</p>
+        <p>Smart Study Material Portal</p>
+    </div>
+</body>
+</html>

@@ -1,29 +1,436 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Search Materials</title>
-</head>
-<body>
-    <div style="float:left;">
-        <h3>Your Profile</h3>
-        <p>ID: {{ student.id }}</p>
-        <p>Username: {{ student.username }}</p>
-        <p>Email: {{ student.email }}</p>
-        <p>Phone: {{ student.phone }}</p>
-    </div>
+{% extends "base.html" %}
 
-    <div style="text-align:center;">
-        <form action="/results" method="GET">
-    <input type="text" name="query" placeholder="Search by name or code">
-    <button type="submit">Search</button>
-</form>
+{% block title %}Search Materials - Smart Student Portal{% endblock %}
+
+{% block content %}
+<!-- Search Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="bi bi-search me-2"></i>Search Study Materials
+                </h4>
+                
+                <form method="GET" class="row g-3">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            {{ form.query(class="form-control form-control-lg", placeholder="Search by name, subject, or keywords...", value=query) }}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        {{ form.category(class="form-select form-select-lg") }}
+                    </div>
+                    
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Search Suggestions -->
+                <div class="mt-3">
+                    <small class="text-muted me-3">Popular searches:</small>
+                    <a href="?query=python" class="badge bg-light text-dark me-2 text-decoration-none">Python</a>
+                    <a href="?query=database" class="badge bg-light text-dark me-2 text-decoration-none">Database</a>
+                    <a href="?query=web development" class="badge bg-light text-dark me-2 text-decoration-none">Web Development</a>
+                    <a href="?query=mathematics" class="badge bg-light text-dark me-2 text-decoration-none">Mathematics</a>
+                </div>
+            </div>
+        </div>
     </div>
-<h3>All Materials</h3>
-<ul>
-  {% for material in materials %}
-    <li>
-      {{ material[0] }} — 
-      <a href="{{ material[2] }}" download>📁 Download PDF</a>
-    </li>
-  {% endfor %}
-</ul>
+</div>
+
+<!-- Filters Sidebar -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-funnel me-2"></i>Filters
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Categories -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold mb-3">Categories</h6>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="cat-pdf" checked>
+                        <label class="form-check-label" for="cat-pdf">
+                            <i class="bi bi-file-earmark-pdf text-danger me-1"></i>PDF Documents
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="cat-image" checked>
+                        <label class="form-check-label" for="cat-image">
+                            <i class="bi bi-image text-success me-1"></i>Images
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="cat-presentation" checked>
+                        <label class="form-check-label" for="cat-presentation">
+                            <i class="bi bi-file-earmark-ppt text-warning me-1"></i>Presentations
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="cat-document" checked>
+                        <label class="form-check-label" for="cat-document">
+                            <i class="bi bi-file-earmark-word text-info me-1"></i>Documents
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Subjects -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold mb-3">Subjects</h6>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="sub-programming" checked>
+                        <label class="form-check-label" for="sub-programming">Programming</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="sub-database" checked>
+                        <label class="form-check-label" for="sub-database">Database</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="sub-web" checked>
+                        <label class="form-check-label" for="sub-web">Web Development</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="sub-math" checked>
+                        <label class="form-check-label" for="sub-math">Mathematics</label>
+                    </div>
+                </div>
+                
+                <!-- Sort Options -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold mb-3">Sort By</h6>
+                    <select class="form-select form-select-sm">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="name">Name A-Z</option>
+                        <option value="popular">Most Popular</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Results -->
+    <div class="col-md-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-list-ul me-2"></i>Search Results
+                    {% if query %}
+                        for "{{ query }}"
+                    {% endif %}
+                </h6>
+                <div class="d-flex align-items-center">
+                    <small class="text-muted me-3">{{ materials|length }} materials found</small>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-secondary active" onclick="toggleView('list')">
+                            <i class="bi bi-list"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="toggleView('grid')">
+                            <i class="bi bi-grid"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if materials %}
+                    <!-- List View -->
+                    <div id="listView">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Material</th>
+                                        <th>Category</th>
+                                        <th>Subject</th>
+                                        <th>Uploaded</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for material in materials %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-file-earmark-text text-primary"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">{{ material[1] }}</h6>
+                                                    <small class="text-muted">ID: {{ material[0] }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">PDF</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">General</span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ material[3].strftime('%b %d, %Y') if material[3] else 'Unknown' }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ material[2] }}" class="btn btn-outline-primary" target="_blank" title="Download">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                                <button class="btn btn-outline-secondary" onclick="shareMaterial('{{ material[0] }}', '{{ material[1] }}', '{{ material[2] }}')" title="Share">
+                                                    <i class="bi bi-share"></i>
+                                                </button>
+                                                <button class="btn btn-outline-warning" onclick="addToFavorites('{{ material[0] }}')" title="Add to Favorites">
+                                                    <i class="bi bi-star"></i>
+                                                </button>
+                                                <button class="btn btn-outline-info" onclick="previewMaterial('{{ material[0] }}', '{{ material[1] }}', '{{ material[2] }}')" title="Preview">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Grid View -->
+                    <div id="gridView" style="display: none;">
+                        <div class="row">
+                            {% for material in materials %}
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body d-flex flex-column">
+                                        <div class="text-center mb-3">
+                                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                <i class="bi bi-file-earmark-text text-primary" style="font-size: 1.5rem;"></i>
+                                            </div>
+                                        </div>
+                                        <h6 class="card-title text-center">{{ material[1] }}</h6>
+                                        <p class="card-text text-center text-muted small">
+                                            ID: {{ material[0] }}<br>
+                                            Uploaded: {{ material[3].strftime('%b %d, %Y') if material[3] else 'Unknown' }}
+                                        </p>
+                                        <div class="mt-auto">
+                                            <div class="d-grid gap-2">
+                                                <a href="{{ material[2] }}" class="btn btn-primary btn-sm" target="_blank">
+                                                    <i class="bi bi-download me-1"></i>Download
+                                                </a>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-secondary" onclick="shareMaterial('{{ material[0] }}', '{{ material[1] }}', '{{ material[2] }}')" title="Share">
+                                                        <i class="bi bi-share"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-warning" onclick="addToFavorites('{{ material[0] }}')" title="Favorite">
+                                                        <i class="bi bi-star"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-info" onclick="previewMaterial('{{ material[0] }}', '{{ material[1] }}', '{{ material[2] }}')" title="Preview">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <nav aria-label="Search results pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <span class="page-link">Previous</span>
+                            </li>
+                            <li class="page-item active">
+                                <span class="page-link">1</span>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">2</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">3</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                {% else %}
+                    <div class="text-center py-5">
+                        {% if query %}
+                            <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">No results found</h5>
+                            <p class="text-muted">Try adjusting your search terms or filters</p>
+                        {% else %}
+                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">No materials available</h5>
+                            <p class="text-muted">Start by uploading some study materials!</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Modal (same as dashboard) -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-share me-2"></i>Share Material
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="shareForm">
+                    <input type="hidden" id="shareMaterialId">
+                    <input type="hidden" id="shareMaterialName">
+                    <input type="hidden" id="shareMaterialLink">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Share via Email</label>
+                        <div class="input-group">
+                            <input type="email" class="form-control" id="shareEmail" placeholder="recipient@example.com">
+                            <button class="btn btn-primary" type="button" onclick="sendEmail()">
+                                <i class="bi bi-envelope me-1"></i>Send
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Share via WhatsApp</label>
+                        <div class="input-group">
+                            <input type="tel" class="form-control" id="sharePhone" placeholder="+1234567890">
+                            <button class="btn btn-success" type="button" onclick="sendWhatsApp()">
+                                <i class="bi bi-whatsapp me-1"></i>Send
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleView(view) {
+    const listView = document.getElementById('listView');
+    const gridView = document.getElementById('gridView');
+    const buttons = document.querySelectorAll('.btn-group .btn');
+    
+    buttons.forEach(btn => btn.classList.remove('active'));
+    
+    if (view === 'list') {
+        listView.style.display = 'block';
+        gridView.style.display = 'none';
+        buttons[0].classList.add('active');
+    } else {
+        listView.style.display = 'none';
+        gridView.style.display = 'block';
+        buttons[1].classList.add('active');
+    }
+}
+
+function clearFilters() {
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    document.querySelector('select').selectedIndex = 0;
+}
+
+function shareMaterial(id, name, link) {
+    document.getElementById('shareMaterialId').value = id;
+    document.getElementById('shareMaterialName').value = name;
+    document.getElementById('shareMaterialLink').value = link;
+    
+    const modal = new bootstrap.Modal(document.getElementById('shareModal'));
+    modal.show();
+}
+
+function sendEmail() {
+    const email = document.getElementById('shareEmail').value;
+    const materialName = document.getElementById('shareMaterialName').value;
+    const materialLink = document.getElementById('shareMaterialLink').value;
+    
+    if (!email) {
+        alert('Please enter an email address');
+        return;
+    }
+    
+    fetch('/send_email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `email=${encodeURIComponent(email)}&material_name=${encodeURIComponent(materialName)}&material_link=${encodeURIComponent(materialLink)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || data.error);
+        if (data.message) {
+            bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
+        }
+    })
+    .catch(error => {
+        alert('Error sending email');
+    });
+}
+
+function sendWhatsApp() {
+    const phone = document.getElementById('sharePhone').value;
+    const materialName = document.getElementById('shareMaterialName').value;
+    const materialLink = document.getElementById('shareMaterialLink').value;
+    
+    if (!phone) {
+        alert('Please enter a phone number');
+        return;
+    }
+    
+    fetch('/send_whatsapp', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `phone=${encodeURIComponent(phone)}&material_name=${encodeURIComponent(materialName)}&material_link=${encodeURIComponent(materialLink)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || data.error);
+        if (data.message) {
+            bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
+        }
+    })
+    .catch(error => {
+        alert('Error sending WhatsApp message');
+    });
+}
+
+function addToFavorites(materialId) {
+    alert('Favorites feature coming soon!');
+}
+
+function previewMaterial(id, name, link) {
+    alert('Preview feature coming soon!');
+}
+</script>
+{% endblock %}

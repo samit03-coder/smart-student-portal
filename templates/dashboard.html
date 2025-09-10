@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Smart Student Portal{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="bg-primary text-white rounded-3 p-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-2">
+                        <i class="bi bi-house-door me-2"></i>Welcome back, {{ student.username }}!
+                    </h2>
+                    <p class="mb-0 opacity-75">
+                        <i class="bi bi-calendar3 me-1"></i>
+                        Last login: {{ student.last_login.split('T')[0] if student.last_login else 'First time' }}
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <div class="bg-white bg-opacity-20 rounded-2 p-3">
+                        <h4 class="mb-0">{{ student.role.title() }}</h4>
+                        <small class="opacity-75">Account Type</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-file-earmark-text text-primary" style="font-size: 1.5rem;"></i>
+                </div>
+                <h3 class="fw-bold text-primary">{{ stats[0] if stats else 0 }}</h3>
+                <p class="text-muted mb-0">Total Materials</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-clock-history text-success" style="font-size: 1.5rem;"></i>
+                </div>
+                <h3 class="fw-bold text-success">{{ stats[1] if stats else 0 }}</h3>
+                <p class="text-muted mb-0">Recent Uploads</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-download text-warning" style="font-size: 1.5rem;"></i>
+                </div>
+                <h3 class="fw-bold text-warning">0</h3>
+                <p class="text-muted mb-0">Downloads</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-star text-info" style="font-size: 1.5rem;"></i>
+                </div>
+                <h3 class="fw-bold text-info">0</h3>
+                <p class="text-muted mb-0">Favorites</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pb-0">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-lightning me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('search') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="bi bi-search mb-2" style="font-size: 1.5rem;"></i>
+                            <span>Search Materials</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="bi bi-person mb-2" style="font-size: 1.5rem;"></i>
+                            <span>View Profile</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <button class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3" onclick="showUploadModal()">
+                            <i class="bi bi-cloud-upload mb-2" style="font-size: 1.5rem;"></i>
+                            <span>Upload Material</span>
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <button class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3" onclick="showNotifications()">
+                            <i class="bi bi-bell mb-2" style="font-size: 1.5rem;"></i>
+                            <span>Notifications</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Materials -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-clock-history me-2"></i>Recent Materials
+                </h5>
+                <a href="{{ url_for('search') }}" class="btn btn-sm btn-outline-primary">
+                    View All <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                {% if materials %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Material</th>
+                                    <th>Type</th>
+                                    <th>Uploaded</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for material in materials %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-file-earmark-text text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">{{ material[1] }}</h6>
+                                                <small class="text-muted">ID: {{ material[0] }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">PDF</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ material[3].strftime('%b %d, %Y') if material[3] else 'Unknown' }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ material[2] }}" class="btn btn-outline-primary" target="_blank">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                            <button class="btn btn-outline-secondary" onclick="shareMaterial('{{ material[0] }}', '{{ material[1] }}', '{{ material[2] }}')">
+                                                <i class="bi bi-share"></i>
+                                            </button>
+                                            <button class="btn btn-outline-warning" onclick="addToFavorites('{{ material[0] }}')">
+                                                <i class="bi bi-star"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted mt-3">No materials available</h5>
+                        <p class="text-muted">Start by uploading some study materials!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Material Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-share me-2"></i>Share Material
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="shareForm">
+                    <input type="hidden" id="shareMaterialId">
+                    <input type="hidden" id="shareMaterialName">
+                    <input type="hidden" id="shareMaterialLink">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Share via Email</label>
+                        <div class="input-group">
+                            <input type="email" class="form-control" id="shareEmail" placeholder="recipient@example.com">
+                            <button class="btn btn-primary" type="button" onclick="sendEmail()">
+                                <i class="bi bi-envelope me-1"></i>Send
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Share via WhatsApp</label>
+                        <div class="input-group">
+                            <input type="tel" class="form-control" id="sharePhone" placeholder="+1234567890">
+                            <button class="btn btn-success" type="button" onclick="sendWhatsApp()">
+                                <i class="bi bi-whatsapp me-1"></i>Send
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function shareMaterial(id, name, link) {
+    document.getElementById('shareMaterialId').value = id;
+    document.getElementById('shareMaterialName').value = name;
+    document.getElementById('shareMaterialLink').value = link;
+    
+    const modal = new bootstrap.Modal(document.getElementById('shareModal'));
+    modal.show();
+}
+
+function sendEmail() {
+    const email = document.getElementById('shareEmail').value;
+    const materialName = document.getElementById('shareMaterialName').value;
+    const materialLink = document.getElementById('shareMaterialLink').value;
+    
+    if (!email) {
+        alert('Please enter an email address');
+        return;
+    }
+    
+    fetch('/send_email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `email=${encodeURIComponent(email)}&material_name=${encodeURIComponent(materialName)}&material_link=${encodeURIComponent(materialLink)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || data.error);
+        if (data.message) {
+            bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
+        }
+    })
+    .catch(error => {
+        alert('Error sending email');
+    });
+}
+
+function sendWhatsApp() {
+    const phone = document.getElementById('sharePhone').value;
+    const materialName = document.getElementById('shareMaterialName').value;
+    const materialLink = document.getElementById('shareMaterialLink').value;
+    
+    if (!phone) {
+        alert('Please enter a phone number');
+        return;
+    }
+    
+    fetch('/send_whatsapp', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `phone=${encodeURIComponent(phone)}&material_name=${encodeURIComponent(materialName)}&material_link=${encodeURIComponent(materialLink)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || data.error);
+        if (data.message) {
+            bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
+        }
+    })
+    .catch(error => {
+        alert('Error sending WhatsApp message');
+    });
+}
+
+function addToFavorites(materialId) {
+    // TODO: Implement favorites functionality
+    alert('Favorites feature coming soon!');
+}
+
+function showUploadModal() {
+    alert('Upload feature coming soon!');
+}
+
+function showNotifications() {
+    alert('Notifications feature coming soon!');
+}
+</script>
+{% endblock %}

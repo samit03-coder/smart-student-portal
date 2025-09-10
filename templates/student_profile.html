@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile - Smart Study Material</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .navbar {
+            background: #4a148c;
+            padding: 15px 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .navbar h1 {
+            color: #fff;
+            font-size: 24px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(233,30,99,0.4);
+        }
+        
+        .profile-container {
+            background: rgba(255,255,255,0.95);
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .profile-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(233,30,99,0.3);
+        }
+        
+        .profile-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .profile-subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .profile-info {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .info-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #ff4081;
+        }
+        
+        .info-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        
+        .info-value {
+            font-size: 18px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .back-btn {
+            display: block;
+            width: fit-content;
+            margin: 30px auto 0;
+            padding: 12px 30px;
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(233,30,99,0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .profile-container {
+                margin: 20px;
+                padding: 30px 20px;
+            }
+            
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>Student Profile</h1>
+        <div class="nav-buttons">
+            <a href="/dashboard" class="nav-btn">Dashboard</a>
+            <a href="/logout" class="nav-btn">Logout</a>
+        </div>
+    </div>
+    
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="profile-avatar">{{ student.username[0].upper() }}</div>
+            <h2 class="profile-title">{{ student.username }}</h2>
+            <p class="profile-subtitle">Student Profile</p>
+        </div>
+        
+        <div class="profile-info">
+            <div class="info-item">
+                <div class="info-label">Student ID</div>
+                <div class="info-value">{{ student.id }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Full Name</div>
+                <div class="info-value">{{ student.username }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Email Address</div>
+                <div class="info-value">{{ student.email }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Phone Number</div>
+                <div class="info-value">{{ student.phone }}</div>
+            </div>
+        </div>
+        
+        <a href="/dashboard" class="back-btn">← Back to Dashboard</a>
+    </div>
+</body>
+</html>
