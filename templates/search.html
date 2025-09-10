@@ -1,11 +1,36 @@
 <!DOCTYPE html>
 <html>
-<head><title>Search Materials</title></head>
+<head>
+    <title>Search Page</title>
+    <style>
+        .right-panel {
+            width: 250px;
+            float: right;
+            background-color: #f9f9f9;
+            padding: 10px;
+            height: 100vh;
+        }
+        .profile-folder {
+            margin: 10px 0;
+            padding: 8px;
+            background-color: #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
 <body>
-    <h1>Search Study Materials</h1>
-    <form action="/results" method="GET">
-        <input type="text" name="query" placeholder="Enter name or code" required>
-        <button type="submit">Search</button>
-    </form>
+    <div class="right-panel">
+        <h3>User Profiles</h3>
+        {% for user in users %}
+            <div class="profile-folder">
+                <a href="/profile/{{ user[0] }}">{{ user[1] }}</a>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="main-content">
+        <h2>Welcome to the Search Page</h2>
+        <!-- Add your search form or content here -->
+    </div>
 </body>
 </html>
