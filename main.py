@@ -48,6 +48,6 @@ def profile(id):
         return render_template('profile.html', user=user)
     else:
         return "User not found"
-
 if __name__ == '__main__':
-    app.run()
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
