@@ -5,12 +5,14 @@ app = Flask(__name__)
 import mysql.connector
 
 def validate_login(student_id, password):
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="your_mysql_password",  # Replace with your actual MySQL password
-        database="smart_portal"
-    )
+    import os
+
+conn = mysql.connector.connect(
+    host=os.environ['DB_HOST'],
+    user=os.environ['DB_USER'],
+    password=os.environ['DB_PASSWORD'],
+    database=os.environ['DB_NAME']
+)
     cursor = conn.cursor()
     query = "SELECT * FROM students WHERE student_id=%s AND password=%s"
     cursor.execute(query, (student_id, password))
