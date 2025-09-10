@@ -1,8 +1,13 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session
 import mysql.connector
 import os
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Replace with a secure key
+
+# Load environment variables (optional if using .env)
+# from dotenv import load_dotenv
+# load_dotenv()
 
 def get_db_connection():
     return mysql.connector.connect(
@@ -12,54 +17,95 @@ def get_db_connection():
         database=os.environ['DB_NAME']
     )
 
+# 🔹 Route: Login Page
 @app.route('/')
-def home():
+def login():
     return render_template('login.html')
 
 @app.route('/login', methods=['POST'])
-def login():
-    username = request.form['username']
+def do_login():
+    user_id = request.form['id']
     password = request.form['password']
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "SELECT * FROM student_data WHERE username=%s AND password=%s"
-    cursor.execute(query, (username, password))
-    result = cursor.fetchone()
+    cursor.execute("SELECT * FROM student_data WHERE id = %s AND password = %s", (user_id, password))
+    student = cursor.fetchone()
     conn.close()
-    if result:
+
+    print("Login attempt:", student)  # Add this line
+
+    if student:
+        session['student'] = {
+            'id': student[0],
+            'username': student[1],
+            'email': student[3],
+            'phone': student[4]
+        }
         return redirect('/search')
     else:
-        return "Login failed"
+        session.clear()  # Clear any existing session
+        return "Invalid credentials"
+
 
 @app.route('/search')
 def search():
+    if 'student' not in session:
+        return redirect('/')
+
+    student = session['student']  # This should be a dictionary with correct keys
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username FROM student_data")
-    students = cursor.fetchall()
-
-    profile_id = request.args.get('profile_id')
-    profile = None
-    if profile_id:
-        cursor.execute("SELECT id, username, email, phone FROM student_data WHERE id = %s", (profile_id,))
-        profile = cursor.fetchone()
-
+    cursor.execute("SELECT material_id, material_name, material_link FROM materials")
+    raw_materials = cursor.fetchall()
     conn.close()
-    return render_template('search.html', students=students, profile=profile)
 
-@app.route('/profile/<int:id>')
-def view_profile(id):
+    materials = [(m[0], m[1], m[2]) for m in raw_materials]
+    return render_template("search.html", student=student, materials=materials)
+
+@app.route('/results')
+def results():
+    query = request.args.get('query')
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "SELECT id, username, email, phone FROM student_data WHERE id = %s"
-    cursor.execute(query, (id,))
-    student = cursor.fetchone()
+    cursor.execute("""
+        SELECT material_id, material_name, material_link 
+        FROM materials 
+        WHERE material_id = %s OR material_name LIKE %s
+    """, (query, f"%{query}%"))
+    raw_materials = cursor.fetchall()
     conn.close()
-    if student:
-        return render_template('profile.html', student=student)
-    else:
-        return "Student not found"
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    # Optional: transform link if needed
+    def transform_drive_link(link):
+        if "drive.google.com/file/d/" in link:
+            file_id = link.split("/d/")[1].split("/")[0]
+            return f"https://drive.google.com/uc?export=download&id={file_id}"
+        return link
+
+    materials = [(m[0], m[1], transform_drive_link(m[2])) for m in raw_materials]
+    return render_template("results.html", query=query, materials=materials)
+
+@app.route('/send_email', methods=['POST'])
+def send_email():
+    material_name = request.form['material_name']
+    material_link = request.form['material_link']
+    email = request.form['email']
+    print(f"Sending '{material_name}' to {email} via email. Link: {material_link}")
+    return f"✅ Material sent to {email} via email."
+
+@app.route('/send_whatsapp', methods=['POST'])
+def send_whatsapp():
+    material_name = request.form['material_name']
+    material_link = request.form['material_link']
+    phone = request.form['phone']
+    print(f"Sending '{material_name}' to WhatsApp number {phone}. Link: {material_link}")
+    return f"✅ Material sent to WhatsApp number {phone}."
+
+# 🔹 Run the App
+if __name__ == "__main__":
+    app.debug = True
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

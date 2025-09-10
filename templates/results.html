@@ -1,16 +1,37 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
-<head><title>Results</title></head>
+<head>
+    <title>Search Results</title>
+</head>
 <body>
-    <h1>Results for "{{ query }}"</h1>
-    {% for material in materials %}
-        <div>
-            <p><strong>{{ material[1] }}</strong> (Code: {{ material[2] }})</p>
-            <a href="mailto:?subject=Study Material&body=Check this: {{ material[3] }}">📧 Email</a> |
-            <a href="https://wa.me/?text=Check this: {{ material[3] }}" target="_blank">📱 WhatsApp</a> |
-            <a href="{{ material[3] }}" download>📥 Google Drive</a>
-        </div>
-        <hr>
-    {% endfor %}
+    <h1>Search Results for: {{ query }}</h1>
+
+    {% if materials %}
+        {% for material in materials %}
+            <div style="margin-bottom: 20px;">
+                <p><strong>{{ material[1] }}</strong> (ID: {{ material[0] }})</p>
+                <a href="{{ material[2] }}" download>📁 Download PDF</a>
+
+                <!-- Email Form -->
+                <form action="/send_email" method="POST" style="margin-top: 10px;">
+                    <input type="hidden" name="material_name" value="{{ material[1] }}">
+                    <input type="hidden" name="material_link" value="{{ material[2] }}">
+                    <input type="email" name="email" placeholder="Student email" required>
+                    <button type="submit">📧 Send via Email</button>
+                </form>
+
+                <!-- WhatsApp Form -->
+                <form action="/send_whatsapp" method="POST" style="margin-top: 10px;">
+                    <input type="hidden" name="material_name" value="{{ material[1] }}">
+                    <input type="hidden" name="material_link" value="{{ material[2] }}">
+                    <input type="text" name="phone" placeholder="WhatsApp number" required>
+                    <button type="submit">📱 Send via WhatsApp</button>
+                </form>
+            </div>
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p>No materials found for your query.</p>
+    {% endif %}
 </body>
 </html>

@@ -1,21 +1,29 @@
-<div class="user-list">
-    <h3>Student List</h3>
-    <ul>
-        {% for student in students %}
-            <li>
-                {{ student[1] }} —
-                <a href="/search?profile_id={{ student[0] }}">View Profile</a>
-            </li>
-        {% endfor %}
-    </ul>
-</div>
-<div class="profile-view">
-    {% if profile %}
-        <h3>Profile</h3>
-        <p><strong>Username:</strong> {{ profile[1] }}</p>
-        <p><strong>Email:</strong> {{ profile[2] }}</p>
-        <p><strong>Phone:</strong> {{ profile[3] }}</p>
-    {% else %}
-        <p>Select a student to view profile.</p>
-    {% endif %}
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Materials</title>
+</head>
+<body>
+    <div style="float:left;">
+        <h3>Your Profile</h3>
+        <p>ID: {{ student.id }}</p>
+        <p>Username: {{ student.username }}</p>
+        <p>Email: {{ student.email }}</p>
+        <p>Phone: {{ student.phone }}</p>
+    </div>
+
+    <div style="text-align:center;">
+        <form action="/results" method="GET">
+    <input type="text" name="query" placeholder="Search by name or code">
+    <button type="submit">Search</button>
+</form>
+    </div>
+<h3>All Materials</h3>
+<ul>
+  {% for material in materials %}
+    <li>
+      {{ material[0] }} — 
+      <a href="{{ material[2] }}" download>📁 Download PDF</a>
+    </li>
+  {% endfor %}
+</ul>
