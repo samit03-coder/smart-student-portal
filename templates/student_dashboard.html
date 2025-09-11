@@ -379,63 +379,51 @@
         }
         
         function sendEmail(materialName, materialLink) {
-            const email = prompt('Enter email address:');
-            if (email) {
-                fetch('/api/send_email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        material_name: materialName,
-                        material_link: materialLink,
-                        email: email
-                    })
+            fetch('/api/send_email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    material_name: materialName,
+                    material_link: materialLink
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        alert(data.message);
-                    } else {
-                        alert(data.error || 'Failed to send email');
-                    }
-                })
-                .catch(error => {
-                    alert('Error sending email: ' + error);
-                });
-            }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.action === 'open_email') {
+                    window.location.href = data.mailto_url;
+                } else {
+                    alert(data.error || 'Failed to prepare email');
+                }
+            })
+            .catch(error => {
+                alert('Error preparing email: ' + error);
+            });
         }
         
         function sendWhatsApp(materialName, materialLink) {
-            const phone = prompt('Enter WhatsApp number (10 digits for India, or with country code):');
-            if (phone) {
-                fetch('/api/send_whatsapp', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        material_name: materialName,
-                        material_link: materialLink,
-                        phone: phone
-                    })
+            fetch('/api/send_whatsapp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    material_name: materialName,
+                    material_link: materialLink
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.action === 'open_whatsapp') {
-                        // Open WhatsApp with pre-filled message
-                        window.open(data.whatsapp_url, '_blank');
-                        alert('WhatsApp opened! Click Send to share the material.');
-                    } else if (data.error) {
-                        alert(data.error);
-                    } else {
-                        alert('WhatsApp ready! Please check your messages.');
-                    }
-                })
-                .catch(error => {
-                    alert('Error preparing WhatsApp: ' + error);
-                });
-            }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.action === 'open_whatsapp') {
+                    window.open(data.whatsapp_url, '_blank');
+                } else {
+                    alert(data.error || 'Failed to prepare WhatsApp');
+                }
+            })
+            .catch(error => {
+                alert('Error preparing WhatsApp: ' + error);
+            });
         }
     </script>
 </body>

@@ -1,0 +1,23 @@
+[build]
+  command = "echo 'No build required for Python Flask app'"
+  publish = "."
+
+[build.environment]
+  PYTHON_VERSION = "3.9"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[functions]
+  directory = "netlify/functions"
+
+# Note: This is a Flask Python application
+# Netlify primarily supports static sites and serverless functions
+# For a full Flask app with database, consider using:
+# - Heroku
+# - Railway
+# - Render
+# - PythonAnywhere
+# - DigitalOcean App Platform

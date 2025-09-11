@@ -201,30 +201,56 @@ function shareMaterial(id, name, link) {
     modal.show();
 }
 
+// Download functionality
+function downloadMaterial(materialId, materialName) {
+    makeRequest(`/api/download/${materialId}`, {
+        method: 'GET'
+    })
+    .then(data => {
+        if (data.success && data.download_url) {
+            // Create a temporary link and trigger download
+            const link = document.createElement('a');
+            link.href = data.download_url;
+            link.download = data.filename || materialName + '.pdf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification(`Downloaded: ${materialName}`, 'success');
+        } else {
+            showNotification(data.error || 'Download failed', 'danger');
+        }
+    })
+    .catch(error => {
+        showNotification('Download failed. Please try again.', 'danger');
+    });
+}
+
 function sendEmail() {
-    const email = document.getElementById('shareEmail').value;
     const materialName = document.getElementById('shareMaterialName').value;
     const materialLink = document.getElementById('shareMaterialLink').value;
-    
-    if (!email) {
-        showNotification('Please enter an email address', 'warning');
-        return;
-    }
     
     const button = event.target;
     setButtonLoading(button, true);
     
-    makeRequest('/send_email', {
+    makeRequest('/api/send_email', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
         },
-        body: `email=${encodeURIComponent(email)}&material_name=${encodeURIComponent(materialName)}&material_link=${encodeURIComponent(materialLink)}`
+        body: JSON.stringify({
+            material_name: materialName,
+            material_link: materialLink
+        })
     })
     .then(data => {
-        showNotification(data.message || data.error, data.message ? 'success' : 'danger');
-        if (data.message) {
+        if (data.success && data.mailto_url) {
+            // Open user's email app with pre-filled content
+            window.location.href = data.mailto_url;
+            showNotification(data.message, 'success');
             bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
+        } else {
+            showNotification(data.error || 'Failed to open email app', 'danger');
         }
     })
     .finally(() => {
@@ -233,29 +259,30 @@ function sendEmail() {
 }
 
 function sendWhatsApp() {
-    const phone = document.getElementById('sharePhone').value;
     const materialName = document.getElementById('shareMaterialName').value;
     const materialLink = document.getElementById('shareMaterialLink').value;
-    
-    if (!phone) {
-        showNotification('Please enter a phone number', 'warning');
-        return;
-    }
     
     const button = event.target;
     setButtonLoading(button, true);
     
-    makeRequest('/send_whatsapp', {
+    makeRequest('/api/send_whatsapp', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
         },
-        body: `phone=${encodeURIComponent(phone)}&material_name=${encodeURIComponent(materialName)}&material_link=${encodeURIComponent(materialLink)}`
+        body: JSON.stringify({
+            material_name: materialName,
+            material_link: materialLink
+        })
     })
     .then(data => {
-        showNotification(data.message || data.error, data.message ? 'success' : 'danger');
-        if (data.message) {
+        if (data.success && data.whatsapp_url) {
+            // Open user's WhatsApp app with pre-filled message
+            window.open(data.whatsapp_url, '_blank');
+            showNotification(data.message, 'success');
             bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
+        } else {
+            showNotification(data.error || 'Failed to open WhatsApp', 'danger');
         }
     })
     .finally(() => {

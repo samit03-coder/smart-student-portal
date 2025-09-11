@@ -210,24 +210,15 @@
                     <input type="hidden" id="shareMaterialName">
                     <input type="hidden" id="shareMaterialLink">
                     
-                    <div class="mb-3">
-                        <label class="form-label">Share via Email</label>
-                        <div class="input-group">
-                            <input type="email" class="form-control" id="shareEmail" placeholder="recipient@example.com">
-                            <button class="btn btn-primary" type="button" onclick="sendEmail()">
-                                <i class="bi bi-envelope me-1"></i>Send
-                            </button>
-                        </div>
+                    <div class="d-grid gap-3">
+                        <button class="btn btn-primary btn-lg" type="button" onclick="sendEmail()">
+                            <i class="bi bi-envelope me-2"></i>Share via Email
+                        </button>
+                        
+                        <button class="btn btn-success btn-lg" type="button" onclick="sendWhatsApp()">
+                            <i class="bi bi-whatsapp me-2"></i>Share via WhatsApp
+                        </button>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Share via WhatsApp</label>
-                        <div class="input-group">
-                            <input type="tel" class="form-control" id="sharePhone" placeholder="+1234567890">
-                            <button class="btn btn-success" type="button" onclick="sendWhatsApp()">
-                                <i class="bi bi-whatsapp me-1"></i>Send
-                            </button>
-                        </div>
                     </div>
                 </form>
             </div>
@@ -248,60 +239,58 @@ function shareMaterial(id, name, link) {
 }
 
 function sendEmail() {
-    const email = document.getElementById('shareEmail').value;
     const materialName = document.getElementById('shareMaterialName').value;
     const materialLink = document.getElementById('shareMaterialLink').value;
     
-    if (!email) {
-        alert('Please enter an email address');
-        return;
-    }
-    
-    fetch('/send_email', {
+    fetch('/api/send_email', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
         },
-        body: `email=${encodeURIComponent(email)}&material_name=${encodeURIComponent(materialName)}&material_link=${encodeURIComponent(materialLink)}`
+        body: JSON.stringify({
+            material_name: materialName,
+            material_link: materialLink
+        })
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.message || data.error);
-        if (data.message) {
+        if (data.success && data.mailto_url) {
+            window.location.href = data.mailto_url;
             bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
+        } else {
+            alert(data.error || 'Failed to open email app');
         }
     })
     .catch(error => {
-        alert('Error sending email');
+        alert('Error opening email app');
     });
 }
 
 function sendWhatsApp() {
-    const phone = document.getElementById('sharePhone').value;
     const materialName = document.getElementById('shareMaterialName').value;
     const materialLink = document.getElementById('shareMaterialLink').value;
     
-    if (!phone) {
-        alert('Please enter a phone number');
-        return;
-    }
-    
-    fetch('/send_whatsapp', {
+    fetch('/api/send_whatsapp', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
         },
-        body: `phone=${encodeURIComponent(phone)}&material_name=${encodeURIComponent(materialName)}&material_link=${encodeURIComponent(materialLink)}`
+        body: JSON.stringify({
+            material_name: materialName,
+            material_link: materialLink
+        })
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.message || data.error);
-        if (data.message) {
+        if (data.success && data.whatsapp_url) {
+            window.open(data.whatsapp_url, '_blank');
             bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
+        } else {
+            alert(data.error || 'Failed to open WhatsApp');
         }
     })
     .catch(error => {
-        alert('Error sending WhatsApp message');
+        alert('Error opening WhatsApp');
     });
 }
 

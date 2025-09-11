@@ -68,8 +68,10 @@ def send_study_material_email(recipient_email, material_name, material_link, stu
     """Send study material via email from admin"""
     try:
         # Admin email configuration
-        admin_email = "bwubta24398@brainwareuniversity.ac.in"
-        admin_password = os.getenv('ADMIN_EMAIL_PASSWORD', 'your_app_password_here')  # You need to set this in .env
+        admin_email = os.getenv('ADMIN_EMAIL', 'bwubta24398@brainwareuniversity.ac.in')
+        admin_password = os.getenv('ADMIN_EMAIL_PASSWORD', 'mypass@03052006')
+        smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+        smtp_port = int(os.getenv('SMTP_PORT', '587'))
         
         # Create message
         msg = MIMEMultipart()
@@ -103,8 +105,8 @@ def send_study_material_email(recipient_email, material_name, material_link, stu
         
         msg.attach(MIMEText(body, 'plain'))
         
-        # Gmail SMTP configuration
-        server = smtplib.SMTP('smtp.gmail.com', 587)
+        # SMTP configuration
+        server = smtplib.SMTP(smtp_server, smtp_port)
         server.starttls()
         server.login(admin_email, admin_password)
         
@@ -486,29 +488,70 @@ def admin_upload_material():
     admin = session['admin']
     
     if request.method == 'POST':
+        upload_type = request.form.get('upload_type', 'file')
         material_name = request.form.get('material_name')
-        material_link = request.form.get('material_link')
         category = request.form.get('category')
         subject = request.form.get('subject')
         description = request.form.get('description')
-        tags = request.form.get('tags')
         
-        if not all([material_name, material_link, category, subject]):
+        if not all([material_name, category, subject, description]):
             flash('Please fill in all required fields.', 'error')
             return render_template('admin_upload_material.html', admin=admin)
+        
+        material_link = None
+        file_size = 0
+        
+        # Handle file upload
+        if upload_type == 'file':
+            if 'pdf_file' not in request.files:
+                flash('Please select a PDF file.', 'error')
+                return render_template('admin_upload_material.html', admin=admin)
+            
+            file = request.files['pdf_file']
+            if file.filename == '':
+                flash('Please select a PDF file.', 'error')
+                return render_template('admin_upload_material.html', admin=admin)
+            
+            if file and file.filename.lower().endswith('.pdf'):
+                # Save file to static/files directory
+                filename = file.filename
+                file_path = os.path.join('static', 'files', filename)
+                file.save(file_path)
+                file_size = os.path.getsize(file_path)
+                material_link = f"http://localhost:5000/static/files/{filename}"
+            else:
+                flash('Please upload a valid PDF file.', 'error')
+                return render_template('admin_upload_material.html', admin=admin)
+        
+        # Handle link upload
+        elif upload_type == 'link':
+            material_link = request.form.get('material_link')
+            if not material_link:
+                flash('Please provide a material link.', 'error')
+                return render_template('admin_upload_material.html', admin=admin)
             
         conn = get_db_connection()
         if conn:
             try:
                 cursor = conn.cursor()
-                cursor.execute("""
-                    INSERT INTO materials (material_name, material_link, category, subject, 
-                                         description, tags, uploader_id, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
-                """, (material_name, material_link, category, subject, description, tags, admin['id']))
                 
-                logger.info(f"Material uploaded by admin {admin['id']}: {material_name}")
-                flash('Study material uploaded successfully!', 'success')
+                # Get next material ID
+                cursor.execute("SELECT COUNT(*) FROM materials")
+                count = cursor.fetchone()[0]
+                material_id = f"BWU/MATERIAL/{count + 1:03d}"
+                
+                # Create tags
+                tags = f"{category.lower()},{subject.lower()},pdf,study-material"
+                
+                cursor.execute("""
+                    INSERT INTO materials (material_id, material_name, material_link, file_type, file_size,
+                                         category, subject, description, tags, uploader_id, is_public, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                """, (material_id, material_name, material_link, 'pdf', file_size, 
+                      category, subject, description, tags, admin['id'], True))
+                
+                logger.info(f"Material uploaded by admin {admin['id']}: {material_id} - {material_name}")
+                flash(f'Study material "{material_name}" uploaded successfully with ID: {material_id}', 'success')
                 return redirect(url_for('admin_materials'))
                 
             except mysql.connector.Error as e:
@@ -598,26 +641,44 @@ def send_email():
     data = request.get_json()
     material_name = data.get('material_name')
     material_link = data.get('material_link')
-    recipient_email = data.get('email')
     
-    if not all([material_name, material_link, recipient_email]):
+    if not all([material_name, material_link]):
         return jsonify({'error': 'Missing required fields'}), 400
-    
-    # Email validation
-    if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', recipient_email):
-        return jsonify({'error': 'Invalid email format'}), 400
     
     # Get student info
     student = session['student']
     student_name = student['username']
     
-    # Send actual email
-    logger.info(f"Sending email from {student['id']} ({student_name}): '{material_name}' to {recipient_email}")
+    # Create email subject and body
+    subject = f"Study Material: {material_name} - Smart Study Portal"
+    body = f"""Hi,
+
+I'm sharing a study material with you from Smart Study Portal:
+
+📖 Material: {material_name}
+🔗 Download Link: {material_link}
+
+📥 Instructions:
+1. Click the link above to download the material
+2. Save it to your device for offline access
+
+📚 Shared via Smart Study Portal
+🏛️ Brainware University
+
+Best regards,
+{student_name}"""
     
-    if send_study_material_email(recipient_email, material_name, material_link, student_name):
-        return jsonify({'message': f'Material "{material_name}" sent to {recipient_email} successfully from Brainware University!'})
-    else:
-        return jsonify({'error': 'Failed to send email. Please check your internet connection and try again.'}), 500
+    # Create mailto URL that opens user's email app
+    mailto_url = f"mailto:?subject={requests.utils.quote(subject)}&body={requests.utils.quote(body)}"
+    
+    logger.info(f"Email sharing initiated by {student['id']} ({student_name}): '{material_name}'")
+    
+    return jsonify({
+        'success': True,
+        'message': f'Opening email app to share "{material_name}"',
+        'mailto_url': mailto_url,
+        'action': 'open_email'
+    })
 
 @app.route('/api/send_whatsapp', methods=['POST'])
 @student_required
@@ -625,21 +686,9 @@ def send_whatsapp():
     data = request.get_json()
     material_name = data.get('material_name')
     material_link = data.get('material_link')
-    phone_number = data.get('phone')
     
-    if not all([material_name, material_link, phone_number]):
+    if not all([material_name, material_link]):
         return jsonify({'error': 'Missing required fields'}), 400
-    
-    # Clean phone number
-    clean_phone = re.sub(r'[^0-9]', '', phone_number)
-    
-    # Add country code if not present (assuming India +91)
-    if len(clean_phone) == 10 and not clean_phone.startswith('91'):
-        clean_phone = '91' + clean_phone
-    
-    # Validate phone number
-    if len(clean_phone) < 10 or len(clean_phone) > 15:
-        return jsonify({'error': 'Invalid phone number format'}), 400
     
     # Get student info
     student = session['student']
@@ -651,28 +700,63 @@ def send_whatsapp():
 🎓 Hi! {student_name} has shared a study material with you:
 
 📖 *Material:* {material_name}
-🔗 *Access Link:* {material_link}
+🔗 *Download Link:* {material_link}
 
 📥 *Instructions:*
-1. Click the link above to access the material
-2. Download or view online
-3. Save for offline access
+1. Click the link above to download the material
+2. Save it to your device for offline access
 
 📚 Shared via Smart Study Portal
 🏛️ Brainware University
-📧 bwubta24398@brainwareuniversity.ac.in"""
+
+Best regards,
+{student_name}"""
     
-    # Create WhatsApp Web URL
-    whatsapp_url = f"https://wa.me/{clean_phone}?text={requests.utils.quote(message)}"
+    # Create WhatsApp URL that opens user's WhatsApp app
+    whatsapp_url = f"https://wa.me/?text={requests.utils.quote(message)}"
     
-    logger.info(f"WhatsApp request from {student['id']}: '{material_name}' to {phone_number}")
+    logger.info(f"WhatsApp sharing initiated by {student['id']} ({student_name}): '{material_name}'")
     
     return jsonify({
         'success': True,
-        'message': f'WhatsApp ready for {phone_number}',
+        'message': f'Opening WhatsApp to share "{material_name}"',
         'whatsapp_url': whatsapp_url,
         'action': 'open_whatsapp'
     })
+
+@app.route('/api/download/<material_id>')
+@student_required
+def download_material(material_id):
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database connection failed'}), 500
+    
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM materials WHERE material_id = %s", (material_id,))
+        material = cursor.fetchone()
+        
+        if not material:
+            return jsonify({'error': 'Material not found'}), 404
+        
+        # Update download count
+        cursor.execute("UPDATE materials SET download_count = download_count + 1 WHERE material_id = %s", (material_id,))
+        
+        # Log download activity
+        student = session['student']
+        logger.info(f"Material downloaded by {student['id']}: {material_id}")
+        
+        return jsonify({
+            'success': True,
+            'download_url': material['material_link'],
+            'filename': material['material_name'] + '.pdf'
+        })
+        
+    except mysql.connector.Error as e:
+        logger.error(f"Download error: {e}")
+        return jsonify({'error': 'Download failed'}), 500
+    finally:
+        conn.close()
 
 @app.route('/student/logout')
 def student_logout():
@@ -691,7 +775,7 @@ def is_admin():
 def is_student():
     return 'student' in session
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    debug = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
-    app.run(host='0.0.0.0', port=port, debug=debug)
+if __name__ == '__main__':
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)

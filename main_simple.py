@@ -7,6 +7,8 @@ import os
 import bcrypt
 import secrets
 from dotenv import load_dotenv
+from functools import wraps
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -50,6 +52,7 @@ def verify_password(password, hashed):
 
 def login_required(f):
     """Decorator to require login"""
+    @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'student' not in session:
             flash('Please log in to access this page.', 'error')
@@ -96,7 +99,7 @@ def login():
                     'email': student['email'],
                     'phone': student['phone'],
                     'role': student.get('role', 'student'),
-                    'last_login': student.get('last_login', '').strftime('%Y-%m-%dT%H:%M:%S') if student.get('last_login') else None
+                    'last_login': student.get('last_login').strftime('%Y-%m-%dT%H:%M:%S') if student.get('last_login') else None
                 }
                 session.permanent = True
                 
