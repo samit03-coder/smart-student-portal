@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: smart-student-portal
+    name: samit-study-portal-2025
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: python main_admin.py
@@ -9,23 +9,23 @@ services:
         value: 3.9.18
       - key: DB_HOST
         fromDatabase:
-          name: smart-portal-db
+          name: samit-portal-db-2025
           property: host
       - key: DB_USER
         fromDatabase:
-          name: smart-portal-db
+          name: samit-portal-db-2025
           property: user
       - key: DB_PASS
         fromDatabase:
-          name: smart-portal-db
+          name: samit-portal-db-2025
           property: password
       - key: DB_NAME
         fromDatabase:
-          name: smart-portal-db
+          name: samit-portal-db-2025
           property: database
       - key: DB_PORT
         fromDatabase:
-          name: smart-portal-db
+          name: samit-portal-db-2025
           property: port
       - key: ADMIN_EMAIL
         value: bwubta24398@brainwareuniversity.ac.in
@@ -41,6 +41,6 @@ services:
         value: your_api_key_here
 
 databases:
-  - name: smart-portal-db
+  - name: samit-portal-db-2025
     databaseName: smart_portal
     user: smart_user
