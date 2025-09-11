@@ -11,41 +11,44 @@ services:
       - key: FLASK_DEBUG
         value: False
       - key: SECRET_KEY
-        generateValue: true
       - key: DB_HOST
         fromDatabase:
-          name: samit-portal-db-2025
+          name: smart-portal-db
           property: host
       - key: DB_USER
         fromDatabase:
-          name: samit-portal-db-2025
+          name: smart-portal-db
           property: user
       - key: DB_PASS
         fromDatabase:
-          name: samit-portal-db-2025
+          name: smart-portal-db
           property: password
       - key: DB_NAME
         fromDatabase:
-          name: samit-portal-db-2025
+          name: smart-portal-db
           property: database
       - key: DB_PORT
         fromDatabase:
-          name: samit-portal-db-2025
+          name: smart-portal-db
           property: port
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_DEBUG
+        value: "False"
       - key: ADMIN_EMAIL
-        value: bwubta24398@brainwareuniversity.ac.in
+        value: "admin@smartportal.com"
       - key: ADMIN_EMAIL_PASSWORD
-        value: mypass@03052006
+        sync: false
       - key: SMTP_SERVER
-        value: smtp.gmail.com
+        value: "smtp.gmail.com"
       - key: SMTP_PORT
-        value: 587
+        value: "587"
       - key: WHATSAPP_API_URL
-        value: https://api.whatsapp.com/send
+        value: "https://api.whatsapp.com/send"
       - key: WHATSAPP_API_KEY
-        value: your_api_key_here
+        sync: false
 
 databases:
-  - name: samit-portal-db-2025
-    databaseName: smart_portal
+  - name: smart-portal-db
+    databaseName: smart_portal_pukh
     user: smart_user

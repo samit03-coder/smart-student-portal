@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, flash, jsonify
-import mysql.connector
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
 import bcrypt
 import secrets
@@ -18,19 +19,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def get_db_connection():
-    """Get database connection with error handling"""
+    """Get PostgreSQL database connection with error handling"""
     try:
-        return mysql.connector.connect(
-            host=os.getenv("DB_HOST", "localhost"),
-            user=os.getenv("DB_USER", "root"),
-            password=os.getenv("DB_PASS", "nopass"),
-            database=os.getenv("DB_NAME", "smart_portal"),
-            port=int(os.getenv("DB_PORT", "3306")),
-            autocommit=True,
-            charset='utf8mb4',
-            use_unicode=True
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST", "dpg-ed313pju1brs73a5g3g-a.oregon-postgres.render.com"),
+            user=os.getenv("DB_USER", "smart_user"),
+            password=os.getenv("DB_PASS", "p4xn6JGJTMEkeA5tzKzDDJLSdxgp7xKu"),
+            database=os.getenv("DB_NAME", "smart_portal_pukh"),
+            port=int(os.getenv("DB_PORT", "5432")),
+            sslmode='require'
         )
-    except mysql.connector.Error as e:
+        conn.autocommit = True
+        return conn
+    except psycopg2.Error as e:
         logger.error(f"Database error: {e}")
         return None
 
@@ -76,10 +77,10 @@ def login():
             return render_template('login.html')
         
         try:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             
             # Check admin first
-            cursor.execute("SELECT * FROM administrators WHERE admin_id = %s AND is_active = TRUE", (user_id,))
+            cursor.execute("SELECT * FROM smart_portal_admins WHERE admin_id = %s AND is_active = TRUE", (user_id,))
             admin = cursor.fetchone()
             
             if admin and verify_password(password, admin['password']):
@@ -90,13 +91,13 @@ def login():
                     'is_super_admin': admin.get('is_super_admin', False)
                 }
                 session.permanent = True
-                cursor.execute("UPDATE administrators SET last_login = NOW() WHERE admin_id = %s", (user_id,))
+                cursor.execute("UPDATE smart_portal_admins SET last_login = NOW() WHERE admin_id = %s", (user_id,))
                 logger.info(f"Admin login successful: {user_id}")
                 flash('Welcome Administrator!', 'success')
                 return redirect('/admin/dashboard')
             
             # Check student
-            cursor.execute("SELECT * FROM student_data WHERE id = %s AND is_active = TRUE", (user_id,))
+            cursor.execute("SELECT * FROM smart_portal_students WHERE id = %s AND is_active = TRUE", (user_id,))
             student = cursor.fetchone()
             
             if student and verify_password(password, student['password']):
@@ -108,14 +109,14 @@ def login():
                     'role': student.get('role', 'student')
                 }
                 session.permanent = True
-                cursor.execute("UPDATE student_data SET last_login = NOW() WHERE id = %s", (user_id,))
+                cursor.execute("UPDATE smart_portal_students SET last_login = NOW() WHERE id = %s", (user_id,))
                 logger.info(f"Student login successful: {user_id}")
                 flash('Login successful! Welcome back!', 'success')
                 return redirect('/student/dashboard')
             
             flash('Invalid credentials. Please check your ID and password.', 'error')
             
-        except mysql.connector.Error as e:
+        except psycopg2.Error as e:
             logger.error(f"Login error: {e}")
             flash('Login failed. Please try again later.', 'error')
         finally:
@@ -138,36 +139,36 @@ def admin_dashboard():
     
     if conn:
         try:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             
             # Get stats
-            cursor.execute("SELECT COUNT(*) as count FROM student_data WHERE is_active = TRUE")
+            cursor.execute("SELECT COUNT(*) as count FROM smart_portal_students WHERE is_active = TRUE")
             stats['total_students'] = cursor.fetchone()['count']
             
-            cursor.execute("SELECT COUNT(*) as count FROM materials")
+            cursor.execute("SELECT COUNT(*) as count FROM smart_portal_materials")
             stats['total_materials'] = cursor.fetchone()['count']
             
-            cursor.execute("SELECT COUNT(*) as count FROM student_data WHERE last_login >= DATE_SUB(NOW(), INTERVAL 7 DAY)")
+            cursor.execute("SELECT COUNT(*) as count FROM smart_portal_students WHERE last_login >= NOW() - INTERVAL '7 days'")
             stats['recent_logins'] = cursor.fetchone()['count']
             
             # Get materials
             if search:
                 cursor.execute("""
                     SELECT material_id, material_name, material_link, category, subject, description, created_at
-                    FROM materials 
+                    FROM smart_portal_materials 
                     WHERE material_name LIKE %s OR category LIKE %s OR subject LIKE %s
                     ORDER BY created_at DESC
                 """, (f"%{search}%", f"%{search}%", f"%{search}%"))
             else:
                 cursor.execute("""
                     SELECT material_id, material_name, material_link, category, subject, description, created_at
-                    FROM materials 
+                    FROM smart_portal_materials 
                     ORDER BY created_at DESC
                     LIMIT 20
                 """)
             materials = cursor.fetchall()
             
-        except mysql.connector.Error as e:
+        except psycopg2.Error as e:
             logger.error(f"Admin dashboard error: {e}")
         finally:
             conn.close()
@@ -189,31 +190,31 @@ def student_dashboard():
     
     if conn:
         try:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             
             # Get stats
-            cursor.execute("SELECT COUNT(*) as count FROM materials WHERE is_public = TRUE")
+            cursor.execute("SELECT COUNT(*) as count FROM smart_portal_materials WHERE is_public = TRUE")
             stats['total_materials'] = cursor.fetchone()['count']
             
             # Get materials
             if search:
                 cursor.execute("""
                     SELECT material_id, material_name, material_link, category, subject, description, created_at
-                    FROM materials 
+                    FROM smart_portal_materials 
                     WHERE is_public = TRUE AND (material_name LIKE %s OR category LIKE %s OR subject LIKE %s)
                     ORDER BY created_at DESC
                 """, (f"%{search}%", f"%{search}%", f"%{search}%"))
             else:
                 cursor.execute("""
                     SELECT material_id, material_name, material_link, category, subject, description, created_at
-                    FROM materials 
+                    FROM smart_portal_materials 
                     WHERE is_public = TRUE
                     ORDER BY created_at DESC
                     LIMIT 20
                 """)
             materials = cursor.fetchall()
             
-        except mysql.connector.Error as e:
+        except psycopg2.Error as e:
             logger.error(f"Student dashboard error: {e}")
         finally:
             conn.close()
@@ -243,10 +244,10 @@ def api_search():
     
     if conn:
         try:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute("""
                 SELECT material_id, material_name, material_link, category, subject
-                FROM materials 
+                FROM smart_portal_materials 
                 WHERE is_public = TRUE AND (material_name LIKE %s OR category LIKE %s OR subject LIKE %s)
                 ORDER BY material_name
                 LIMIT 10
@@ -254,7 +255,7 @@ def api_search():
             
             materials = cursor.fetchall()
             
-        except mysql.connector.Error as e:
+        except psycopg2.Error as e:
             logger.error(f"Search error: {e}")
         finally:
             conn.close()

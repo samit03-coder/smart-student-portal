@@ -1,8 +1,9 @@
-import mysql.connector
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import bcrypt
 import os
 from dotenv import load_dotenv
 import logging
-import bcrypt
 
 # Load environment variables
 load_dotenv()
@@ -12,41 +13,25 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def get_db_connection():
-    """Get database connection with error handling"""
+    """Get PostgreSQL database connection"""
     try:
-        conn = mysql.connector.connect(
-            host=os.getenv("DB_HOST", "localhost"),
-            user=os.getenv("DB_USER", "root"),
-            password=os.getenv("DB_PASS", "nopass"),
-            database=os.getenv("DB_NAME", "smart_portal"),
-            port=int(os.getenv("DB_PORT", "3306")),
-            autocommit=True,
-            charset='utf8mb4',
-            use_unicode=True
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST", "dpg-ed313pju1brs73a5g3g-a.oregon-postgres.render.com"),
+            user=os.getenv("DB_USER", "smart_user"),
+            password=os.getenv("DB_PASS", "p4xn6JGJTMEkeA5tzKzDDJLSdxgp7xKu"),
+            database=os.getenv("DB_NAME", "smart_portal_pukh"),
+            port=int(os.getenv("DB_PORT", "5432")),
+            sslmode='require'
         )
+        conn.autocommit = True
         return conn
-    except mysql.connector.Error as e:
+    except psycopg2.Error as e:
         logger.error(f"Database connection error: {e}")
         return None
 
 def create_database():
-    """Create database if it doesn't exist"""
-    try:
-        conn = mysql.connector.connect(
-            host=os.getenv("DB_HOST", "localhost"),
-            user=os.getenv("DB_USER", "root"),
-            password=os.getenv("DB_PASS", "nopass"),
-            port=int(os.getenv("DB_PORT", "3306"))
-        )
-        cursor = conn.cursor()
-        
-        db_name = os.getenv("DB_NAME", "smart_portal")
-        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
-        logger.info(f"Database '{db_name}' created or verified")
-        
-        conn.close()
-    except mysql.connector.Error as e:
-        logger.error(f"Database creation error: {e}")
+    """Database already exists on Render, skip creation"""
+    logger.info("Using existing Render PostgreSQL database")
 
 def hash_password(password):
     """Hash password using bcrypt"""
@@ -65,113 +50,99 @@ def setup_tables():
     try:
         # Drop existing tables if they exist (in correct order)
         tables_to_drop = [
-            'notifications', 'user_favorites', 'activity_logs', 
-            'user_sessions', 'materials', 'categories', 'administrators', 'student_data'
+            'smart_portal_notifications', 'smart_portal_user_favorites', 'smart_portal_activity_logs', 
+            'smart_portal_user_sessions', 'smart_portal_materials', 'smart_portal_categories', 'smart_portal_admins', 'smart_portal_students'
         ]
         
         for table in tables_to_drop:
             cursor.execute(f"DROP TABLE IF EXISTS {table}")
             logger.info(f"Dropped table {table} if it existed")
         
-        # Student data table
-        cursor.execute('''
-            CREATE TABLE student_data (
-                id VARCHAR(20) PRIMARY KEY,
+        # Create student_data table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS smart_portal_students (
+                id VARCHAR(50) PRIMARY KEY,
                 username VARCHAR(100) NOT NULL,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                phone VARCHAR(20) NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
-                role ENUM('student', 'teacher', 'admin') DEFAULT 'student',
+                phone VARCHAR(20),
+                role VARCHAR(20) DEFAULT 'student',
                 is_active BOOLEAN DEFAULT TRUE,
-                email_verified BOOLEAN DEFAULT FALSE,
-                last_login TIMESTAMP NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                INDEX idx_email (email),
-                INDEX idx_role (role),
-                INDEX idx_active (is_active)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-        ''')
+                last_login TIMESTAMP NULL
+            )
+        """)
         
-        # Administrators table
-        cursor.execute('''
-            CREATE TABLE administrators (
-                admin_id VARCHAR(20) PRIMARY KEY,
+        # Create administrators table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS smart_portal_admins (
+                admin_id VARCHAR(50) PRIMARY KEY,
                 admin_name VARCHAR(100) NOT NULL,
-                email VARCHAR(255) UNIQUE NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
+                phone VARCHAR(20),
                 is_super_admin BOOLEAN DEFAULT FALSE,
                 is_active BOOLEAN DEFAULT TRUE,
-                last_login TIMESTAMP NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                INDEX idx_email (email),
-                INDEX idx_active (is_active)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-        ''')
+                last_login TIMESTAMP NULL
+            )
+        """)
         
-        # Materials table
-        cursor.execute('''
-            CREATE TABLE materials (
-                material_id VARCHAR(50) PRIMARY KEY,
-                material_name VARCHAR(255) NOT NULL,
+        # Create materials table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS smart_portal_materials (
+                material_id SERIAL PRIMARY KEY,
+                material_name VARCHAR(200) NOT NULL,
                 material_link TEXT NOT NULL,
-                file_type VARCHAR(50),
-                file_size BIGINT DEFAULT 0,
-                category VARCHAR(100),
-                subject VARCHAR(100),
+                category VARCHAR(100) NOT NULL,
+                subject VARCHAR(100) NOT NULL,
                 description TEXT,
-                tags TEXT,
-                uploader_id VARCHAR(20),
                 is_public BOOLEAN DEFAULT TRUE,
-                download_count INT DEFAULT 0,
+                created_by VARCHAR(50),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                INDEX idx_name (material_name),
-                INDEX idx_category (category),
-                INDEX idx_subject (subject),
-                INDEX idx_public (is_public),
-                INDEX idx_created (created_at),
-                FULLTEXT idx_search (material_name, description, tags)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-        ''')
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
         
         logger.info("All tables created successfully")
         
-        # Insert default admin user (password: admin123)
-        admin_password = hash_password('admin123')
+        # Insert default admin user
+        admin_password = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt())
         cursor.execute("""
-            INSERT INTO administrators (admin_id, admin_name, email, password, is_super_admin, is_active)
+            INSERT INTO smart_portal_admins (admin_id, admin_name, email, password, phone, is_super_admin) 
             VALUES (%s, %s, %s, %s, %s, %s)
-        """, ('admin', 'System Administrator', 'admin@smartportal.com', admin_password, True, True))
+            ON CONFLICT (admin_id) DO NOTHING
+        """, ('admin001', 'System Administrator', 'admin@smartportal.com', admin_password, '+1234567890', True))
         logger.info("Default admin user created (ID: admin, Password: admin123)")
         
         # Insert sample student (password: student123)
         student_password = hash_password('student123')
         cursor.execute("""
-            INSERT INTO student_data (id, username, email, phone, password, role, email_verified, is_active)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, ('student001', 'Test Student', 'student@test.com', '1234567890', student_password, 'student', True, True))
+            INSERT INTO smart_portal_students (id, username, email, password, phone) 
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO NOTHING
+        """, ('student001', 'Test Student', 'student@test.com', student_password, '1234567890'))
         logger.info("Sample student created (ID: student001, Password: student123)")
         
         # Insert sample materials
         sample_materials = [
-            ('BWU/MAT/001', 'Introduction to Python Programming', 'https://drive.google.com/file/d/1abc123', 'pdf', 2048000, 'Programming', 'Python Basics', 'Complete guide to Python programming fundamentals', 'python,programming,basics', 'admin'),
-            ('BWU/MAT/002', 'Database Design Principles', 'https://drive.google.com/file/d/2def456', 'pdf', 1536000, 'Database', 'SQL Fundamentals', 'Learn database design and SQL queries', 'database,sql,design', 'admin'),
-            ('BWU/MAT/003', 'Web Development with Flask', 'https://drive.google.com/file/d/3ghi789', 'pdf', 3072000, 'Web Development', 'Flask Framework', 'Building web applications with Python Flask', 'flask,web,python', 'admin'),
-            ('BWU/MAT/004', 'Mathematics for Computer Science', 'https://drive.google.com/file/d/4jkl012', 'pdf', 4096000, 'Mathematics', 'Discrete Math', 'Mathematical foundations for CS students', 'math,discrete,computer-science', 'admin'),
-            ('BWU/MAT/005', 'Data Structures and Algorithms', 'https://drive.google.com/file/d/5mno345', 'pdf', 2560000, 'Computer Science', 'Algorithms', 'Essential algorithms and data structures', 'algorithms,data-structures,programming', 'admin')
+            ('Introduction to Python Programming', 'https://drive.google.com/file/d/1abc123', 'Programming', 'Python Basics', 'Complete guide to Python programming fundamentals', 'admin001'),
+            ('Database Design Principles', 'https://drive.google.com/file/d/2def456', 'Database', 'SQL Fundamentals', 'Learn database design and SQL queries', 'admin001'),
+            ('Web Development with Flask', 'https://drive.google.com/file/d/3ghi789', 'Web Development', 'Flask Framework', 'Building web applications with Python Flask', 'admin001'),
+            ('Mathematics for Computer Science', 'https://drive.google.com/file/d/4jkl012', 'Mathematics', 'Discrete Math', 'Mathematical foundations for CS students', 'admin001'),
+            ('Data Structures and Algorithms', 'https://drive.google.com/file/d/5mno345', 'Computer Science', 'Algorithms', 'Essential algorithms and data structures', 'admin001')
         ]
         
-        cursor.executemany("""
-            INSERT INTO materials (material_id, material_name, material_link, file_type, file_size, category, subject, description, tags, uploader_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, sample_materials)
+        for material in sample_materials:
+            cursor.execute("""
+                INSERT INTO smart_portal_materials (material_name, material_link, category, subject, description, created_by) 
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, material)
         logger.info("Sample materials inserted")
         
         return True
         
-    except mysql.connector.Error as e:
+    except psycopg2.Error as e:
         logger.error(f"Table creation error: {e}")
         return False
     finally:
