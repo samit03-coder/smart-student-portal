@@ -3,7 +3,8 @@ from flask_wtf import FlaskForm, CSRFProtect
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, EmailField, TextAreaField, SelectField, IntegerField
 from wtforms.validators import DataRequired, Email, Length, ValidationError
-import mysql.connector
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
 import bcrypt
 import secrets
@@ -38,20 +39,19 @@ logger = logging.getLogger(__name__)
 
 # Database connection
 def get_db_connection():
+    """Get PostgreSQL database connection with error handling"""
     try:
-        conn = mysql.connector.connect(
+        conn = psycopg2.connect(
             host=os.getenv("DB_HOST", "localhost"),
-            user=os.getenv("DB_USER", "root"),
-            password=os.getenv("DB_PASS", "nopass"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASS", ""),
             database=os.getenv("DB_NAME", "smart_portal"),
-            port=int(os.getenv("DB_PORT", "3306")),
-            autocommit=True,
-            charset='utf8mb4',
-            use_unicode=True
+            port=os.getenv("DB_PORT", "5432")
         )
+        conn.autocommit = True
         return conn
-    except mysql.connector.Error as e:
-        logger.error(f"Database connection error: {e}")
+    except psycopg2.Error as e:
+        logger.error(f"Database connection failed: {e}")
         return None
 
 # Security utilities
@@ -195,7 +195,7 @@ def login():
             return render_template('login.html')
         
         try:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             
             # Check admin first
             cursor.execute("SELECT * FROM administrators WHERE admin_id = %s AND is_active = TRUE", (user_id,))
@@ -242,7 +242,7 @@ def login():
                         flash('Invalid student password. Please try again.', 'error')
                 else:
                     flash('User ID not found. Please check your credentials.', 'error')
-        except mysql.connector.Error as e:
+        except psycopg2.Error as e:
             logger.error(f"Login error: {e}")
             flash('Login failed. Please try again.', 'error')
         finally:
@@ -273,7 +273,7 @@ def admin_dashboard_view():
     
     if conn:
         try:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             
             # Get stats
             cursor.execute("SELECT COUNT(*) as count FROM student_data WHERE is_active = TRUE")
@@ -302,7 +302,7 @@ def admin_dashboard_view():
                 """)
             materials = cursor.fetchall()
             
-        except mysql.connector.Error as e:
+        except psycopg2.Error as e:
             logger.error(f"Dashboard error: {e}")
         finally:
             conn.close()
@@ -318,7 +318,7 @@ def student_dashboard_view():
     
     if conn:
         try:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             
             # Get materials with search
             if search:
@@ -338,7 +338,7 @@ def student_dashboard_view():
                 """)
             materials = cursor.fetchall()
             
-        except mysql.connector.Error as e:
+        except psycopg2.Error as e:
             logger.error(f"Student dashboard error: {e}")
         finally:
             conn.close()
@@ -356,7 +356,7 @@ def admin_profile():
         conn = get_db_connection()
         if conn:
             try:
-                cursor = conn.cursor(dictionary=True)
+                cursor = conn.cursor(cursor_factory=RealDictCursor)
                 cursor.execute("SELECT password FROM administrators WHERE admin_id = %s", (admin['id'],))
                 admin_data = cursor.fetchone()
                 
@@ -364,7 +364,7 @@ def admin_profile():
                     return render_template('admin_profile.html', admin=admin, verified=True)
                 else:
                     flash('Incorrect password.', 'error')
-            except mysql.connector.Error as e:
+            except psycopg2.Error as e:
                 logger.error(f"Admin profile error: {e}")
             finally:
                 conn.close()
@@ -382,7 +382,7 @@ def admin_students():
     
     if conn:
         try:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             if search:
                 cursor.execute("""
                     SELECT id, username, email, phone, is_active, last_login, created_at 
@@ -397,7 +397,7 @@ def admin_students():
                     ORDER BY created_at DESC
                 """)
             students = cursor.fetchall()
-        except mysql.connector.Error as e:
+        except psycopg2.Error as e:
             logger.error(f"Students fetch error: {e}")
         finally:
             conn.close()
@@ -441,7 +441,7 @@ def admin_add_student():
                 flash(f'Student {student_id} added successfully!', 'success')
                 return redirect(url_for('admin_students'))
                 
-            except mysql.connector.Error as e:
+            except psycopg2.Error as e:
                 logger.error(f"Add student error: {e}")
                 flash('Failed to add student. Please try again.', 'error')
             finally:
@@ -460,7 +460,7 @@ def admin_materials():
     
     if conn:
         try:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             if search:
                 cursor.execute("""
                     SELECT material_id, material_name, category, subject, uploader_id, created_at, download_count
@@ -475,7 +475,7 @@ def admin_materials():
                     ORDER BY created_at DESC
                 """)
             materials = cursor.fetchall()
-        except mysql.connector.Error as e:
+        except psycopg2.Error as e:
             logger.error(f"Materials fetch error: {e}")
         finally:
             conn.close()
@@ -554,7 +554,7 @@ def admin_upload_material():
                 flash(f'Study material "{material_name}" uploaded successfully with ID: {material_id}', 'success')
                 return redirect(url_for('admin_materials'))
                 
-            except mysql.connector.Error as e:
+            except psycopg2.Error as e:
                 logger.error(f"Upload material error: {e}")
                 flash('Failed to upload material. Please try again.', 'error')
             finally:
@@ -597,7 +597,7 @@ def student_dashboard():
     
     if conn:
         try:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             
             # Get stats
             cursor.execute("SELECT COUNT(*) as count FROM materials WHERE is_public = TRUE")
@@ -621,7 +621,7 @@ def student_dashboard():
                 """)
             materials = cursor.fetchall()
             
-        except mysql.connector.Error as e:
+        except psycopg2.Error as e:
             logger.error(f"Student dashboard error: {e}")
         finally:
             conn.close()
@@ -732,7 +732,7 @@ def download_material(material_id):
         return jsonify({'error': 'Database connection failed'}), 500
     
     try:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute("SELECT * FROM materials WHERE material_id = %s", (material_id,))
         material = cursor.fetchone()
         
@@ -752,7 +752,7 @@ def download_material(material_id):
             'filename': material['material_name'] + '.pdf'
         })
         
-    except mysql.connector.Error as e:
+    except psycopg2.Error as e:
         logger.error(f"Download error: {e}")
         return jsonify({'error': 'Download failed'}), 500
     finally:
