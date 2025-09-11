@@ -261,6 +261,101 @@ def api_search():
     
     return jsonify({'materials': materials})
 
+@app.route('/api/send_email', methods=['POST'])
+def api_send_email():
+    if 'student' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    material_name = data.get('material_name')
+    material_link = data.get('material_link')
+    
+    if not all([material_name, material_link]):
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    # Get student info
+    student = session['student']
+    student_name = student['username']
+    
+    # Create email subject and body
+    subject = f"Study Material: {material_name} - Smart Study Portal"
+    body = f"""Hi,
+
+I'm sharing a study material with you from Smart Study Portal:
+
+📖 Material: {material_name}
+🔗 Download Link: {material_link}
+
+📥 Instructions:
+1. Click the link above to download the material
+2. Save it to your device for offline access
+
+📚 Shared via Smart Study Portal
+🏛️ Brainware University
+
+Best regards,
+{student_name}"""
+    
+    # Create mailto URL that opens user's email app
+    import urllib.parse
+    mailto_url = f"mailto:?subject={urllib.parse.quote(subject)}&body={urllib.parse.quote(body)}"
+    
+    logger.info(f"Email sharing initiated by {student['id']} ({student_name}): '{material_name}'")
+    
+    return jsonify({
+        'success': True,
+        'message': f'Opening email app to share "{material_name}"',
+        'mailto_url': mailto_url,
+        'action': 'open_email'
+    })
+
+@app.route('/api/send_whatsapp', methods=['POST'])
+def api_send_whatsapp():
+    if 'student' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    material_name = data.get('material_name')
+    material_link = data.get('material_link')
+    
+    if not all([material_name, material_link]):
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    # Get student info
+    student = session['student']
+    student_name = student['username']
+    
+    # Create WhatsApp message
+    message = f"""📚 *Study Material from Smart Portal*
+
+🎓 Hi! {student_name} has shared a study material with you:
+
+📖 *Material:* {material_name}
+🔗 *Download Link:* {material_link}
+
+📥 *Instructions:*
+1. Click the link above to download the material
+2. Save it to your device for offline access
+
+📚 Shared via Smart Study Portal
+🏛️ Brainware University
+
+Best regards,
+{student_name}"""
+    
+    # Create WhatsApp URL that opens user's WhatsApp app
+    import urllib.parse
+    whatsapp_url = f"https://wa.me/?text={urllib.parse.quote(message)}"
+    
+    logger.info(f"WhatsApp sharing initiated by {student['id']} ({student_name}): '{material_name}'")
+    
+    return jsonify({
+        'success': True,
+        'message': f'Opening WhatsApp to share "{material_name}"',
+        'whatsapp_url': whatsapp_url,
+        'action': 'open_whatsapp'
+    })
+
 @app.route('/logout')
 def logout():
     if 'admin' in session:
