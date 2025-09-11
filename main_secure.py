@@ -57,7 +57,9 @@ def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), salt)
 
 def verify_password(password, hashed):
-    """Verify password against hash"""
+    """Verify password against hash - handle both string and bytes"""
+    if isinstance(hashed, str):
+        hashed = hashed.encode('utf-8')
     return bcrypt.checkpw(password.encode('utf-8'), hashed)
 
 def validate_input(text, max_length=255):
@@ -163,7 +165,7 @@ def login():
             cursor.execute("SELECT * FROM student_data WHERE id = %s", (user_id,))
             student = cursor.fetchone()
             
-            if student and verify_password(password, student['password'].encode('utf-8')):
+            if student and verify_password(password, student['password']):
                 session['student'] = {
                     'id': student['id'],
                     'username': student['username'],

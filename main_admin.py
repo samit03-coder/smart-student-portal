@@ -61,7 +61,9 @@ def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), salt)
 
 def verify_password(password, hashed):
-    """Verify password against hash"""
+    """Verify password against hash - handle both string and bytes"""
+    if isinstance(hashed, str):
+        hashed = hashed.encode('utf-8')
     return bcrypt.checkpw(password.encode('utf-8'), hashed)
 
 def send_study_material_email(recipient_email, material_name, material_link, student_name="Student"):
@@ -203,7 +205,7 @@ def login():
             
             if admin:
                 # Admin found, check password
-                if verify_password(password, admin['password'].encode('utf-8')):
+                if verify_password(password, admin['password']):
                     session['admin'] = {
                         'id': admin['admin_id'],
                         'name': admin['admin_name'],
@@ -225,7 +227,7 @@ def login():
                 if student:
                     # Student found, check password
                     logger.info(f"Student found: {student['id']}, checking password")
-                    if verify_password(password, student['password'].encode('utf-8')):
+                    if verify_password(password, student['password']):
                         session['student'] = {
                             'id': student['id'],
                             'username': student['username'],
@@ -360,7 +362,7 @@ def admin_profile():
                 cursor.execute("SELECT password FROM administrators WHERE admin_id = %s", (admin['id'],))
                 admin_data = cursor.fetchone()
                 
-                if admin_data and verify_password(password, admin_data['password'].encode('utf-8')):
+                if admin_data and verify_password(password, admin_data['password']):
                     return render_template('admin_profile.html', admin=admin, verified=True)
                 else:
                     flash('Incorrect password.', 'error')
